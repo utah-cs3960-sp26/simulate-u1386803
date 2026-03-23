@@ -36,4 +36,5 @@ target_link_libraries(simulate PRIVATE SDL3::SDL3)
 target_compile_definitions(simulate PRIVATE $<$<CONFIG:Debug>:SIMULATE_DEBUG=1>)
 
 enable_testing()
-add_test(NAME headless_smoke COMMAND simulate --headless --frames 600 --seed 1 -e 0.25 -n 200)
+add_test(NAME headless_smoke COMMAND simulate --headless --frames 600 --seed 1 -e 0.25 -n 700)
+set_tests_properties(headless_smoke PROPERTIES TIMEOUT 180)

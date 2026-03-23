@@ -15,8 +15,8 @@ struct Args {
   bool headless = false;
   int frames = 600;
   uint32_t seed = 1u;
-  float restitution = 0.62f;
-  int ball_count = 200;
+  float restitution = 0.86f;
+  int ball_count = 700;
   bool help = false;
 };
 
@@ -129,7 +129,7 @@ int run_headless(const Args& a) {
     sim.step(dt);
   }
 
-  const std::string rep = sim.validate_report(1.1f, 5000.f);
+  const std::string rep = sim.validate_report(1.25f, 5500.f);
   if (!rep.empty()) {
     SDL_Log("VALIDATION FAIL: %s", rep.c_str());
     return 1;

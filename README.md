@@ -18,14 +18,17 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 ```
 
 - **Restitution** `e`: `-e 0.4` or `--restitution 0.4`, or environment variable `RESTITUTION` (flag wins if both are set).
-- **Ball count**: `-n 200` or `--balls 200` (default 200).
-- **Headless check** (no window): `simulate --headless --frames 600 --seed 1 -e 0.25 -n 200`
+- **Ball count**: `-n 700` or `--balls 700` (default **700**).
+- **Headless check** (no window): `simulate --headless --frames 600 --seed 1 -e 0.25 -n 700`
 
 ## Physics
 
-- Fixed timestep `1/480` s with accumulator and up to **32** substeps per rendered frame.
+- World **960×960**; circular tank; default **700** balls (radii about **6.4–9.2** px).
+- Fixed timestep `1/480` s with accumulator and up to **40** substeps per rendered frame.
 - **Friction** is not modeled (velocity-only impulses along contact normals).
-- Balls spawn with **tangential and radial** speed plus an **upward** bias so motion stays lively (not only falling with gravity). Default restitution is fairly bouncy (`0.62`).
+- Default restitution is **high (~0.86)** for hard, sustained bouncing; spawn velocities are strong (tangential + radial + upward bias).
+- **Linear drag** (`linear_drag_k` ≈ `0.088` 1/s) applies each substep so energy bleeds over time and the pile **settles after long chaotic motion** (on the order of many seconds of visible bouncing, then damp out).
+- Contact tuning uses a **lower** `bounce_threshold` so only gentle impacts lose restitution early; furious hits stay elastic longer.
 
 ## Visuals
 
@@ -42,9 +45,9 @@ cd build && ctest
 Compare settling time with the same seed and ball count:
 
 ```bash
-./build/simulate --headless --frames 400 --seed 1 -e 0.15 -n 200
-./build/simulate --headless --frames 400 --seed 1 -e 0.45 -n 200
-./build/simulate --headless --frames 400 --seed 1 -e 0.75 -n 200
+./build/simulate --headless --frames 400 --seed 1 -e 0.15 -n 700
+./build/simulate --headless --frames 400 --seed 1 -e 0.45 -n 700
+./build/simulate --headless --frames 400 --seed 1 -e 0.75 -n 700
 ```
 
 Lower `e` should damp motion faster; the circular container size is unchanged.

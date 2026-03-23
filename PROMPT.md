@@ -75,3 +75,19 @@ You are building this repository into a **working 2D physics demo**. The human i
 3. Commit after each stable step.
 
 Begin now from the current repository state.
+
+
+
+## NEW PROMPT v1
+
+I want the balls to be bigger, lets decreasse the amount of balls to like 200, and also make sure they bounce around and is pleasent to watch. also make the containier much smaller and is a circle rather than a swuare
+
+## new prompt v2
+
+Looks good, keep adding and pushing to the repo, make sure the balls are not only dropping, they need to bounce around. and also just make the balls 1 color, green . make sure the balls are bouncing around. follow the steps in prompt.md and once finished make sure you follow the version control protocol as well.
+
+## new prompt v3
+
+I want the balls to bounce much more before they settle down, I also want to go back to 700 balls. make sure the bouncing is much more furiuos. like these guys gotta have energy in them, bounce for a solid 15 seconds hardd. and then settle
+
+

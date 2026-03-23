@@ -22,9 +22,9 @@ inline std::int64_t cell_key(int cx, int cy) {
 Simulation::Simulation(SimConfig cfg) : cfg_(cfg), rng_(cfg.rng_seed ? cfg.rng_seed : 1u) {
   build_walls();
   spawn_balls();
-  for (int k = 0; k < 6; ++k) {
+  for (int k = 0; k < 12; ++k) {
     positional_ball_wall();
-    positional_ball_ball(2);
+    positional_ball_ball(3);
   }
 }
 
@@ -48,7 +48,7 @@ void Simulation::build_walls() {
   const float half = std::min(world_w_, world_h_) * 0.5f;
   tank_radius_ = half - wall_margin_;
 
-  const int nseg = 56;
+  const int nseg = 64;
   const float two_pi = 6.2831853f;
   for (int i = 0; i < nseg; ++i) {
     float t0 = two_pi * static_cast<float>(i) / static_cast<float>(nseg);
@@ -64,9 +64,9 @@ void Simulation::spawn_balls() {
   rng_ = cfg_.rng_seed ? cfg_.rng_seed : 1u;
 
   const int n = std::max(1, cfg_.ball_count);
-  const float r_lo = 11.5f;
-  const float r_hi = 15.5f;
-  const float pad = 5.f;
+  const float r_lo = 6.4f;
+  const float r_hi = 9.2f;
+  const float pad = 4.f;
   const float r_spawn_max = tank_radius_ - r_hi - pad;
   if (r_spawn_max < r_hi + 2.f) {
     return;
@@ -78,9 +78,9 @@ void Simulation::spawn_balls() {
     float rd = len(off);
     Vec2 e_t = rd > 1e-4f ? Vec2{-off.y, off.x} * (1.f / rd) : Vec2{1.f, 0.f};
     Vec2 e_r = rd > 1e-4f ? off * (1.f / rd) : Vec2{0.f, -1.f};
-    float vt = rnd_range(-440.f, 440.f);
-    float vr = rnd_range(-160.f, 160.f);
-    return e_t * vt + e_r * vr + Vec2{rnd_range(-120.f, 120.f), rnd_range(-280.f, -70.f)};
+    float vt = rnd_range(-920.f, 920.f);
+    float vr = rnd_range(-380.f, 380.f);
+    return e_t * vt + e_r * vr + Vec2{rnd_range(-260.f, 260.f), rnd_range(-520.f, -140.f)};
   };
 
   auto overlaps_existing = [&](Vec2 p, float rad) {
@@ -93,7 +93,7 @@ void Simulation::spawn_balls() {
   };
 
   int placed = 0;
-  int rings = 32;
+  int rings = 52;
   for (int ring = 0; ring < rings && placed < n; ++ring) {
     float rr = (static_cast<float>(ring + 1) / static_cast<float>(rings)) * r_spawn_max * 0.98f;
     int count = std::max(3, static_cast<int>(two_pi * rr / (2.f * r_hi + 3.f)));
@@ -119,7 +119,7 @@ void Simulation::spawn_balls() {
   }
 
   int tries = 0;
-  while (placed < n && tries < n * 400) {
+  while (placed < n && tries < n * 900) {
     ++tries;
     float t = rnd_range(0.f, 6.2831853f);
     float u = std::sqrt(rnd_range(0.04f, 1.f));
@@ -151,7 +151,9 @@ void Simulation::spawn_balls() {
 
 void Simulation::integrate(float h) {
   const Vec2 g{0.f, cfg_.gravity};
+  const float drag = std::exp(-cfg_.linear_drag_k * h);
   for (auto& b : balls_) {
+    b.v = b.v * drag;
     b.v += g * h;
     b.p += b.v * h;
   }
@@ -294,7 +296,7 @@ void Simulation::velocity_ball_wall(float /*h*/) {
         e = 0.f;
       }
       float dv = -(1.f + e) * vn;
-      dv = std::clamp(dv, -1200.f, 1200.f);
+      dv = std::clamp(dv, -4500.f, 4500.f);
       b.v += n * dv;
     }
   }
@@ -343,7 +345,7 @@ void Simulation::velocity_ball_ball(float /*h*/) {
       return;
     }
     float impulse = -(1.f + e) * vn / w;
-    float max_imp = 12000.f * std::min(a.r, b.r);
+    float max_imp = 28000.f * std::min(a.r, b.r);
     impulse = std::clamp(impulse, -max_imp, max_imp);
     a.v -= n * (impulse * a.inv_mass);
     b.v += n * (impulse * b.inv_mass);
@@ -401,14 +403,14 @@ void Simulation::solve_contacts(float h) {
   (void)h;
   for (int it = 0; it < cfg_.solver_iterations; ++it) {
     positional_ball_wall();
-    positional_ball_ball(2);
+    positional_ball_ball(3);
     clamp_to_tank();
   }
   velocity_ball_wall(h);
   velocity_ball_ball(h);
-  for (int it = 0; it < 4; ++it) {
+  for (int it = 0; it < 6; ++it) {
     positional_ball_wall();
-    positional_ball_ball(2);
+    positional_ball_ball(3);
     clamp_to_tank();
   }
 }
@@ -427,7 +429,7 @@ void Simulation::step(float dt_seconds) {
   }
   if (steps > 0) {
     positional_ball_wall();
-    positional_ball_ball(1);
+    positional_ball_ball(2);
     clamp_to_tank();
   }
 }
