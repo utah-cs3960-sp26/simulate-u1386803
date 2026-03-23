@@ -124,7 +124,7 @@ int run_headless(const Args& a) {
     sim.step(dt);
   }
 
-  const std::string rep = sim.validate_report(1.25f, 5500.f);
+  const std::string rep = sim.validate_report(1.25f, 6000.f);
   if (!rep.empty()) {
     SDL_Log("VALIDATION FAIL: %s", rep.c_str());
     return 1;

@@ -90,4 +90,14 @@ Looks good, keep adding and pushing to the repo, make sure the balls are not onl
 
 I want the balls to bounce much more before they settle down, I also want to go back to 700 balls. make sure the bouncing is much more furiuos. like these guys gotta have energy in them, bounce for a solid 15 seconds hardd. and then settle
 
+## new prompt v4
+
+I want to make sure the fps is much faster and smoother, its like stuck at 20 I feel llike its capped. make sure its not. also I want them to bounce much more, make the balls bounce against each other and such, also lets make the balls bounce 30 seconds more, keep going until you fix the fps issue.
+
+## new prompt v5
+I want more energy in the balls when they are bouncing, like make sure its natural to how the balls are depleating thier energy, the balls are settling to fast which look sunnatrual. also the fps is still horrible.
+
+## new primpt v6
+very good fps, amazing. I want the start of the application to throw the balls in crazyyyyy amount of eneryg to show how good the balls are bouncing. it feels like the balls are behaving coreclty but like I feel like in the begning there is not enough energy throwing the ball around
+
 

@@ -42,7 +42,7 @@ void Simulation::rebuild_ball_grid() {
 Simulation::Simulation(SimConfig cfg) : cfg_(cfg), rng_(cfg.rng_seed ? cfg.rng_seed : 1u) {
   build_walls();
   spawn_balls();
-  for (int k = 0; k < 10; ++k) {
+  for (int k = 0; k < 14; ++k) {
     positional_ball_wall();
     positional_ball_ball(2);
   }
@@ -98,9 +98,9 @@ void Simulation::spawn_balls() {
     float rd = len(off);
     Vec2 e_t = rd > 1e-4f ? Vec2{-off.y, off.x} * (1.f / rd) : Vec2{1.f, 0.f};
     Vec2 e_r = rd > 1e-4f ? off * (1.f / rd) : Vec2{0.f, -1.f};
-    float vt = rnd_range(-1080.f, 1080.f);
-    float vr = rnd_range(-470.f, 470.f);
-    return e_t * vt + e_r * vr + Vec2{rnd_range(-340.f, 340.f), rnd_range(-620.f, -110.f)};
+    float vt = rnd_range(-2050.f, 2050.f);
+    float vr = rnd_range(-880.f, 880.f);
+    return e_t * vt + e_r * vr + Vec2{rnd_range(-620.f, 620.f), rnd_range(-1050.f, -140.f)};
   };
 
   auto overlaps_existing = [&](Vec2 p, float rad) {
@@ -296,7 +296,7 @@ void Simulation::velocity_ball_wall(float /*h*/) {
       e = 0.f;
     }
     float dv = -(1.f + e) * vn;
-    dv = std::clamp(dv, -4500.f, 4500.f);
+    dv = std::clamp(dv, -6200.f, 6200.f);
     b.v += n * dv;
   }
 }
@@ -341,7 +341,7 @@ void Simulation::velocity_ball_ball(float /*h*/) {
       return;
     }
     float impulse = -(1.f + e) * vn / w;
-    float max_imp = 28000.f * std::min(a.r, b.r);
+    float max_imp = 36000.f * std::min(a.r, b.r);
     impulse = std::clamp(impulse, -max_imp, max_imp);
     a.v -= n * (impulse * a.inv_mass);
     b.v += n * (impulse * b.inv_mass);
