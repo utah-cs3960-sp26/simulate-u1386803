@@ -24,15 +24,17 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 ## Physics
 
 - World **960×960**; circular tank; default **700** balls (radii about **6.4–9.2** px).
-- Fixed timestep `1/480` s with accumulator and up to **40** substeps per rendered frame.
+- Fixed timestep `1/480` s with accumulator and up to **32** substeps per rendered frame.
 - **Friction** is not modeled (velocity-only impulses along contact normals).
-- Default restitution is **high (~0.86)** for hard, sustained bouncing; spawn velocities are strong (tangential + radial + upward bias).
-- **Linear drag** (`linear_drag_k` ≈ `0.088` 1/s) applies each substep so energy bleeds over time and the pile **settles after long chaotic motion** (on the order of many seconds of visible bouncing, then damp out).
-- Contact tuning uses a **lower** `bounce_threshold` so only gentle impacts lose restitution early; furious hits stay elastic longer.
+- **Ball–wall** contact uses an **analytic circle** (same radius as the drawn tank); wall segments are **visual only**, which keeps physics cost **O(balls)** per pass instead of O(balls × wall segments).
+- Default restitution **0.88**; spawn velocities are strong (tangential + radial + upward) so balls **ricochet off each other and the rim** for a long time.
+- **Linear drag** (`linear_drag_k` ≈ `0.036` 1/s) applies each substep so energy bleeds slowly and the pile settles **well after** the initial ~30+ seconds of hard motion (tweak drag in `SimConfig` if you want longer or shorter chaos).
+- `bounce_threshold` is fairly low so only gentle impacts go inelastic early.
 
 ## Visuals
 
-- All balls are drawn **solid green** in the graphical build.
+- All balls are drawn **solid green** with **8-sided** approximated circles (fewer triangles per ball for higher FPS).
+- The window requests **VSync off** (`SDL_HINT_RENDER_VSYNC` + `SDL_SetRenderVSync(0)`) so the title-bar FPS is not capped by the display refresh when the GPU can keep up.
 
 ## Tests
 

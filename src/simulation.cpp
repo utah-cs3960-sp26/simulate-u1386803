@@ -22,9 +22,9 @@ inline std::int64_t cell_key(int cx, int cy) {
 Simulation::Simulation(SimConfig cfg) : cfg_(cfg), rng_(cfg.rng_seed ? cfg.rng_seed : 1u) {
   build_walls();
   spawn_balls();
-  for (int k = 0; k < 12; ++k) {
+  for (int k = 0; k < 10; ++k) {
     positional_ball_wall();
-    positional_ball_ball(3);
+    positional_ball_ball(2);
   }
 }
 
@@ -78,9 +78,9 @@ void Simulation::spawn_balls() {
     float rd = len(off);
     Vec2 e_t = rd > 1e-4f ? Vec2{-off.y, off.x} * (1.f / rd) : Vec2{1.f, 0.f};
     Vec2 e_r = rd > 1e-4f ? off * (1.f / rd) : Vec2{0.f, -1.f};
-    float vt = rnd_range(-920.f, 920.f);
-    float vr = rnd_range(-380.f, 380.f);
-    return e_t * vt + e_r * vr + Vec2{rnd_range(-260.f, 260.f), rnd_range(-520.f, -140.f)};
+    float vt = rnd_range(-980.f, 980.f);
+    float vr = rnd_range(-420.f, 420.f);
+    return e_t * vt + e_r * vr + Vec2{rnd_range(-300.f, 300.f), rnd_range(-560.f, -120.f)};
   };
 
   auto overlaps_existing = [&](Vec2 p, float rad) {
@@ -162,30 +162,21 @@ void Simulation::integrate(float h) {
 void Simulation::positional_ball_wall() {
   const float pos_percent = 1.0f;
   for (auto& b : balls_) {
-    for (const auto& w : walls_) {
-      Vec2 ab = w.b - w.a;
-      float ab2 = len_sq(ab);
-      if (ab2 < 1e-12f) {
-        continue;
-      }
-      float t = dot(b.p - w.a, ab) / ab2;
-      t = std::clamp(t, 0.f, 1.f);
-      Vec2 closest = w.a + ab * t;
-      Vec2 d = b.p - closest;
-      float dist = len(d);
-      if (dist < 1e-6f) {
-        d = normalize(Vec2{-ab.y, ab.x});
-        dist = 1e-6f;
-      }
-      Vec2 n = d * (1.f / dist);
-      float overlap = b.r - dist;
-      float slop = 0.015f * b.r;
-      if (overlap <= slop) {
-        continue;
-      }
-      float corr = (overlap - slop) * pos_percent;
-      b.p += n * corr;
+    Vec2 d = b.p - tank_center_;
+    float dist = len(d);
+    if (dist < 1e-6f) {
+      b.p.x += 0.02f;
+      d = b.p - tank_center_;
+      dist = len(d);
     }
+    Vec2 n_out = d * (1.f / dist);
+    float overlap = dist + b.r - tank_radius_;
+    float slop = 0.015f * b.r;
+    if (overlap <= slop) {
+      continue;
+    }
+    float corr = (overlap - slop) * pos_percent;
+    b.p -= n_out * corr;
   }
 }
 
@@ -265,40 +256,37 @@ void Simulation::positional_ball_ball(int sweeps) {
 void Simulation::velocity_ball_wall(float /*h*/) {
   const float e_base = std::clamp(cfg_.restitution, 0.f, 1.f);
   for (auto& b : balls_) {
-    for (const auto& w : walls_) {
-      Vec2 ab = w.b - w.a;
-      float ab2 = len_sq(ab);
-      if (ab2 < 1e-12f) {
-        continue;
-      }
-      float t = dot(b.p - w.a, ab) / ab2;
-      t = std::clamp(t, 0.f, 1.f);
-      Vec2 closest = w.a + ab * t;
-      Vec2 d = b.p - closest;
-      float dist = len(d);
-      if (dist < 1e-6f) {
-        continue;
-      }
-      Vec2 n = d * (1.f / dist);
-      float pen = b.r - dist;
-      if (pen < -0.02f * b.r) {
-        continue;
-      }
-      float vn = dot(b.v, n);
-      if (vn >= 0.f) {
-        continue;
-      }
-      float e = e_base;
-      if (vn > -cfg_.bounce_threshold) {
-        e = 0.f;
-      }
-      if (std::abs(vn) < cfg_.rest_velocity_slop) {
-        e = 0.f;
-      }
-      float dv = -(1.f + e) * vn;
-      dv = std::clamp(dv, -4500.f, 4500.f);
-      b.v += n * dv;
+    Vec2 d = b.p - tank_center_;
+    float dist = len(d);
+    if (dist < 1e-6f) {
+      continue;
     }
+    Vec2 n_out = d * (1.f / dist);
+    Vec2 closest = tank_center_ + n_out * tank_radius_;
+    Vec2 dvec = b.p - closest;
+    float nd = len(dvec);
+    if (nd < 1e-6f) {
+      continue;
+    }
+    Vec2 n = dvec * (1.f / nd);
+    float pen = b.r - nd;
+    if (pen < -0.02f * b.r) {
+      continue;
+    }
+    float vn = dot(b.v, n);
+    if (vn >= 0.f) {
+      continue;
+    }
+    float e = e_base;
+    if (vn > -cfg_.bounce_threshold) {
+      e = 0.f;
+    }
+    if (std::abs(vn) < cfg_.rest_velocity_slop) {
+      e = 0.f;
+    }
+    float dv = -(1.f + e) * vn;
+    dv = std::clamp(dv, -4500.f, 4500.f);
+    b.v += n * dv;
   }
 }
 
@@ -408,7 +396,7 @@ void Simulation::solve_contacts(float h) {
   }
   velocity_ball_wall(h);
   velocity_ball_ball(h);
-  for (int it = 0; it < 6; ++it) {
+  for (int it = 0; it < 5; ++it) {
     positional_ball_wall();
     positional_ball_ball(3);
     clamp_to_tank();
@@ -448,20 +436,10 @@ std::string Simulation::validate_report(float max_penetration, float max_speed) 
     if (d_out > oob_slack) {
       issues << "oob idx=" << i << " p=(" << b.p.x << "," << b.p.y << "); ";
     }
-    for (const auto& w : walls_) {
-      Vec2 ab = w.b - w.a;
-      float ab2 = len_sq(ab);
-      if (ab2 < 1e-12f) {
-        continue;
-      }
-      float t = dot(b.p - w.a, ab) / ab2;
-      t = std::clamp(t, 0.f, 1.f);
-      Vec2 closest = w.a + ab * t;
-      float dist = len(b.p - closest);
-      float pen = b.r - dist;
-      if (pen > max_penetration) {
-        issues << "wall_pen idx=" << i << " pen=" << pen << "; ";
-      }
+    const float dist_c = len(b.p - tank_center_);
+    const float wall_pen = dist_c + b.r - tank_radius_;
+    if (wall_pen > max_penetration) {
+      issues << "wall_pen idx=" << i << " pen=" << wall_pen << "; ";
     }
   }
 

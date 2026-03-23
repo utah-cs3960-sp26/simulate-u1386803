@@ -15,7 +15,7 @@ struct Args {
   bool headless = false;
   int frames = 600;
   uint32_t seed = 1u;
-  float restitution = 0.86f;
+  float restitution = 0.88f;
   int ball_count = 700;
   bool help = false;
 };
@@ -81,30 +81,25 @@ void draw_walls(SDL_Renderer* r, const Simulation& sim) {
 }
 
 void draw_ball_fan(SDL_Renderer* r, const Ball& b, SDL_Color fill) {
-  const int segs = 12;
+  constexpr int segs = 8;
   SDL_Vertex vx[static_cast<size_t>(segs) + 2];
+  const SDL_FColor fc{fill.r / 255.f, fill.g / 255.f, fill.b / 255.f, fill.a / 255.f};
   vx[0].position.x = b.p.x;
   vx[0].position.y = b.p.y;
-  vx[0].color = {fill.r / 255.f, fill.g / 255.f, fill.b / 255.f, fill.a / 255.f};
+  vx[0].color = fc;
   vx[0].tex_coord = {0.f, 0.f};
 
   for (int k = 0; k <= segs; ++k) {
     float t = (static_cast<float>(k) / static_cast<float>(segs)) * 6.2831853f;
     vx[static_cast<size_t>(k) + 1].position.x = b.p.x + std::cos(t) * b.r;
     vx[static_cast<size_t>(k) + 1].position.y = b.p.y + std::sin(t) * b.r;
-    vx[static_cast<size_t>(k) + 1].color = vx[0].color;
+    vx[static_cast<size_t>(k) + 1].color = fc;
     vx[static_cast<size_t>(k) + 1].tex_coord = {0.f, 0.f};
   }
 
-  const int idx_count = segs * 3;
-  int idx[static_cast<size_t>(idx_count)];
-  int p = 0;
-  for (int k = 0; k < segs; ++k) {
-    idx[p++] = 0;
-    idx[p++] = 1 + k;
-    idx[p++] = 2 + k;
-  }
-  SDL_RenderGeometry(r, nullptr, vx, segs + 2, idx, idx_count);
+  static const int idx[segs * 3] = {0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5,
+                                      0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 9};
+  SDL_RenderGeometry(r, nullptr, vx, segs + 2, idx, segs * 3);
 }
 
 int run_headless(const Args& a) {
@@ -147,6 +142,7 @@ int run_visual(const Args& a) {
 
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
+  SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
   if (!SDL_CreateWindowAndRenderer("simulate-u1386803", static_cast<int>(sim.world_width()),
                                     static_cast<int>(sim.world_height()), 0, &window, &renderer)) {
     SDL_Log("CreateWindowAndRenderer failed: %s", SDL_GetError());

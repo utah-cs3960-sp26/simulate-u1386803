@@ -45,16 +45,16 @@ struct Ball {
 };
 
 struct SimConfig {
-  float restitution = 0.86f;
+  float restitution = 0.88f;
   float gravity = 640.f;
-  /// Light exponential velocity damping (1/s) so chaos eventually settles after ~15s.
-  float linear_drag_k = 0.088f;
+  /// Light exponential velocity damping (1/s); lower = longer visible chaos before settling.
+  float linear_drag_k = 0.036f;
   float fixed_dt = 1.f / 480.f;
-  int solver_iterations = 7;
-  int max_substeps = 40;
+  int solver_iterations = 6;
+  int max_substeps = 32;
   float max_velocity = 4200.f;
-  float bounce_threshold = 22.f;
-  float rest_velocity_slop = 2.2f;
+  float bounce_threshold = 18.f;
+  float rest_velocity_slop = 2.0f;
   uint32_t rng_seed = 1u;
   int ball_count = 700;
 };
