@@ -27,9 +27,10 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 - Fixed timestep `1/480` s with accumulator and up to **32** substeps per rendered frame.
 - **Friction** is not modeled (velocity-only impulses along contact normals).
 - **Ball–wall** contact uses an **analytic circle** (same radius as the drawn tank); wall segments are **visual only**, which keeps physics cost **O(balls)** per pass instead of O(balls × wall segments).
-- Default restitution **0.88**; spawn velocities are strong (tangential + radial + upward) so balls **ricochet off each other and the rim** for a long time.
-- **Linear drag** (`linear_drag_k` ≈ `0.036` 1/s) applies each substep so energy bleeds slowly and the pile settles **well after** the initial ~30+ seconds of hard motion (tweak drag in `SimConfig` if you want longer or shorter chaos).
-- `bounce_threshold` is fairly low so only gentle impacts go inelastic early.
+- **Ball–ball** broadphase uses a **fixed uniform grid with singly linked lists** (no `unordered_map` rebuild per sweep), which cuts hash overhead and improves frame time with hundreds of bodies.
+- Default restitution **0.90**; spawn velocities are strong (tangential + radial + upward) so balls **ricochet off each other and the rim** for a long time.
+- **Linear drag** (`linear_drag_k` ≈ `0.011` 1/s) is kept small so most energy loss comes from **collisions**, not artificial “air” damping—motion stays lively longer and settles more naturally.
+- **`bounce_threshold`** / **`rest_velocity_slop`** are tuned so only fairly gentle contacts lose restitution early; hard impacts stay bouncy.
 
 ## Visuals
 

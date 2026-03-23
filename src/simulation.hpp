@@ -45,16 +45,16 @@ struct Ball {
 };
 
 struct SimConfig {
-  float restitution = 0.88f;
+  float restitution = 0.90f;
   float gravity = 640.f;
-  /// Light exponential velocity damping (1/s); lower = longer visible chaos before settling.
-  float linear_drag_k = 0.036f;
+  /// Tiny air-like damping (1/s); collisions do most energy loss—keep this low for natural long bounce.
+  float linear_drag_k = 0.011f;
   float fixed_dt = 1.f / 480.f;
   int solver_iterations = 6;
   int max_substeps = 32;
   float max_velocity = 4200.f;
-  float bounce_threshold = 18.f;
-  float rest_velocity_slop = 2.0f;
+  float bounce_threshold = 9.f;
+  float rest_velocity_slop = 1.15f;
   uint32_t rng_seed = 1u;
   int ball_count = 700;
 };
@@ -90,6 +90,11 @@ class Simulation {
   std::vector<Ball> balls_;
   std::vector<WallSeg> walls_;
 
+  std::vector<int> grid_head_;
+  std::vector<int> grid_next_;
+  int grid_nx_ = 0;
+  int grid_ny_ = 0;
+
   uint32_t rng_;
 
   uint32_t rnd_u32();
@@ -105,4 +110,6 @@ class Simulation {
   void velocity_ball_ball(float h);
   void clamp_velocities();
   void clamp_to_tank();
+
+  void rebuild_ball_grid();
 };

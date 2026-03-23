@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdint>
 #include <sstream>
-#include <unordered_map>
 
 namespace {
 
@@ -12,12 +11,33 @@ inline int cell_coord(float v, float cell) {
   return static_cast<int>(std::floor(v / cell));
 }
 
-inline std::int64_t cell_key(int cx, int cy) {
-  return (static_cast<std::int64_t>(static_cast<std::uint32_t>(cx)) << 32) |
-         static_cast<std::uint32_t>(cy);
-}
-
 }  // namespace
+
+void Simulation::rebuild_ball_grid() {
+  const int nb = static_cast<int>(balls_.size());
+  if (nb <= 0) {
+    return;
+  }
+  const int nx = std::max(4, 2 + static_cast<int>(std::ceil(world_w_ / cell_size_)));
+  const int ny = std::max(4, 2 + static_cast<int>(std::ceil(world_h_ / cell_size_)));
+  const int nc = nx * ny;
+  grid_head_.resize(static_cast<size_t>(nc));
+  grid_next_.resize(static_cast<size_t>(nb));
+  grid_nx_ = nx;
+  grid_ny_ = ny;
+  std::fill(grid_head_.begin(), grid_head_.end(), -1);
+
+  for (int i = 0; i < nb; ++i) {
+    const auto& b = balls_[i];
+    int cx = cell_coord(b.p.x, cell_size_);
+    int cy = cell_coord(b.p.y, cell_size_);
+    cx = std::clamp(cx, 0, nx - 1);
+    cy = std::clamp(cy, 0, ny - 1);
+    const int c = cy * nx + cx;
+    grid_next_[static_cast<size_t>(i)] = grid_head_[static_cast<size_t>(c)];
+    grid_head_[static_cast<size_t>(c)] = i;
+  }
+}
 
 Simulation::Simulation(SimConfig cfg) : cfg_(cfg), rng_(cfg.rng_seed ? cfg.rng_seed : 1u) {
   build_walls();
@@ -78,9 +98,9 @@ void Simulation::spawn_balls() {
     float rd = len(off);
     Vec2 e_t = rd > 1e-4f ? Vec2{-off.y, off.x} * (1.f / rd) : Vec2{1.f, 0.f};
     Vec2 e_r = rd > 1e-4f ? off * (1.f / rd) : Vec2{0.f, -1.f};
-    float vt = rnd_range(-980.f, 980.f);
-    float vr = rnd_range(-420.f, 420.f);
-    return e_t * vt + e_r * vr + Vec2{rnd_range(-300.f, 300.f), rnd_range(-560.f, -120.f)};
+    float vt = rnd_range(-1080.f, 1080.f);
+    float vr = rnd_range(-470.f, 470.f);
+    return e_t * vt + e_r * vr + Vec2{rnd_range(-340.f, 340.f), rnd_range(-620.f, -110.f)};
   };
 
   auto overlaps_existing = [&](Vec2 p, float rad) {
@@ -187,69 +207,60 @@ void Simulation::positional_ball_ball(int sweeps) {
     return;
   }
 
-  auto sweep = [&]() {
-    std::unordered_map<std::int64_t, std::vector<int>> grid;
-    grid.reserve(static_cast<size_t>(nb * 2));
-    for (int i = 0; i < nb; ++i) {
-      const auto& b = balls_[i];
-      int cx = cell_coord(b.p.x, cell_size_);
-      int cy = cell_coord(b.p.y, cell_size_);
-      grid[cell_key(cx, cy)].push_back(i);
+  auto resolve_pair = [&](int i, int j) {
+    if (j <= i) {
+      return;
     }
+    Ball& a = balls_[i];
+    Ball& b = balls_[j];
+    Vec2 delta = b.p - a.p;
+    float dist2 = len_sq(delta);
+    float rsum = a.r + b.r;
+    if (dist2 < 1e-10f || dist2 >= rsum * rsum) {
+      return;
+    }
+    float dist = std::sqrt(dist2);
+    Vec2 n = delta * (1.f / dist);
+    float overlap = rsum - dist;
+    float slop = 0.002f * std::min(a.r, b.r);
+    if (overlap <= slop) {
+      return;
+    }
+    float corr = (overlap - slop) * pos_percent;
+    float w = a.inv_mass + b.inv_mass;
+    if (w < 1e-12f) {
+      return;
+    }
+    float wa = b.inv_mass / w;
+    float wb = a.inv_mass / w;
+    a.p -= n * (corr * wa);
+    b.p += n * (corr * wb);
+  };
 
-    auto resolve_pair = [&](int i, int j) {
-      if (j <= i) {
-        return;
-      }
-      Ball& a = balls_[i];
-      Ball& b = balls_[j];
-      Vec2 delta = b.p - a.p;
-      float dist2 = len_sq(delta);
-      float rsum = a.r + b.r;
-      if (dist2 < 1e-10f || dist2 >= rsum * rsum) {
-        return;
-      }
-      float dist = std::sqrt(dist2);
-      Vec2 n = delta * (1.f / dist);
-      float overlap = rsum - dist;
-      float slop = 0.002f * std::min(a.r, b.r);
-      if (overlap <= slop) {
-        return;
-      }
-      float corr = (overlap - slop) * pos_percent;
-      float w = a.inv_mass + b.inv_mass;
-      if (w < 1e-12f) {
-        return;
-      }
-      float wa = b.inv_mass / w;
-      float wb = a.inv_mass / w;
-      a.p -= n * (corr * wa);
-      b.p += n * (corr * wb);
-    };
-
-    for (const auto& kv : grid) {
-      const auto& cell = kv.second;
-      for (int i : cell) {
-        const auto& b = balls_[i];
-        int cx = cell_coord(b.p.x, cell_size_);
-        int cy = cell_coord(b.p.y, cell_size_);
+  for (int s = 0; s < sweeps; ++s) {
+    rebuild_ball_grid();
+    const int nx = grid_nx_;
+    const int ny = grid_ny_;
+    const int nc = nx * ny;
+    for (int ci = 0; ci < nc; ++ci) {
+      const int cx = ci % nx;
+      const int cy = ci / nx;
+      for (int i = grid_head_[static_cast<size_t>(ci)]; i != -1; i = grid_next_[static_cast<size_t>(i)]) {
         for (int ox = -1; ox <= 1; ++ox) {
           for (int oy = -1; oy <= 1; ++oy) {
-            auto it = grid.find(cell_key(cx + ox, cy + oy));
-            if (it == grid.end()) {
+            const int cx2 = cx + ox;
+            const int cy2 = cy + oy;
+            if (cx2 < 0 || cy2 < 0 || cx2 >= nx || cy2 >= ny) {
               continue;
             }
-            for (int j : it->second) {
+            const int cj = cy2 * nx + cx2;
+            for (int j = grid_head_[static_cast<size_t>(cj)]; j != -1; j = grid_next_[static_cast<size_t>(j)]) {
               resolve_pair(i, j);
             }
           }
         }
       }
     }
-  };
-
-  for (int s = 0; s < sweeps; ++s) {
-    sweep();
   }
 }
 
@@ -293,17 +304,14 @@ void Simulation::velocity_ball_wall(float /*h*/) {
 void Simulation::velocity_ball_ball(float /*h*/) {
   const float e_base = std::clamp(cfg_.restitution, 0.f, 1.f);
   const int nb = static_cast<int>(balls_.size());
-  std::unordered_map<std::int64_t, std::vector<int>> grid;
-  grid.reserve(static_cast<size_t>(nb * 2));
-
-  for (int i = 0; i < nb; ++i) {
-    const auto& b = balls_[i];
-    int cx = cell_coord(b.p.x, cell_size_);
-    int cy = cell_coord(b.p.y, cell_size_);
-    grid[cell_key(cx, cy)].push_back(i);
+  if (nb <= 0) {
+    return;
   }
 
   auto impulse_pair = [&](int i, int jidx) {
+    if (jidx <= i) {
+      return;
+    }
     Ball& a = balls_[i];
     Ball& b = balls_[jidx];
     Vec2 delta = b.p - a.p;
@@ -339,23 +347,23 @@ void Simulation::velocity_ball_ball(float /*h*/) {
     b.v += n * (impulse * b.inv_mass);
   };
 
-  for (const auto& kv : grid) {
-    const auto& cell = kv.second;
-    for (size_t ii = 0; ii < cell.size(); ++ii) {
-      int i = cell[ii];
-      const auto& b = balls_[i];
-      int cx = cell_coord(b.p.x, cell_size_);
-      int cy = cell_coord(b.p.y, cell_size_);
+  rebuild_ball_grid();
+  const int nx = grid_nx_;
+  const int ny = grid_ny_;
+  const int nc = nx * ny;
+  for (int ci = 0; ci < nc; ++ci) {
+    const int cx = ci % nx;
+    const int cy = ci / nx;
+    for (int i = grid_head_[static_cast<size_t>(ci)]; i != -1; i = grid_next_[static_cast<size_t>(i)]) {
       for (int ox = -1; ox <= 1; ++ox) {
         for (int oy = -1; oy <= 1; ++oy) {
-          auto it = grid.find(cell_key(cx + ox, cy + oy));
-          if (it == grid.end()) {
+          const int cx2 = cx + ox;
+          const int cy2 = cy + oy;
+          if (cx2 < 0 || cy2 < 0 || cx2 >= nx || cy2 >= ny) {
             continue;
           }
-          for (int j : it->second) {
-            if (j <= i) {
-              continue;
-            }
+          const int cj = cy2 * nx + cx2;
+          for (int j = grid_head_[static_cast<size_t>(cj)]; j != -1; j = grid_next_[static_cast<size_t>(j)]) {
             impulse_pair(i, j);
           }
         }
@@ -396,7 +404,7 @@ void Simulation::solve_contacts(float h) {
   }
   velocity_ball_wall(h);
   velocity_ball_ball(h);
-  for (int it = 0; it < 5; ++it) {
+  for (int it = 0; it < 6; ++it) {
     positional_ball_wall();
     positional_ball_ball(3);
     clamp_to_tank();
@@ -418,6 +426,7 @@ void Simulation::step(float dt_seconds) {
   if (steps > 0) {
     positional_ball_wall();
     positional_ball_ball(2);
+    positional_ball_wall();
     clamp_to_tank();
   }
 }

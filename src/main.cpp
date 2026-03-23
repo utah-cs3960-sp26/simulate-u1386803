@@ -15,7 +15,7 @@ struct Args {
   bool headless = false;
   int frames = 600;
   uint32_t seed = 1u;
-  float restitution = 0.88f;
+  float restitution = 0.90f;
   int ball_count = 700;
   bool help = false;
 };
