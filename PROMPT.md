@@ -100,4 +100,8 @@ I want more energy in the balls when they are bouncing, like make sure its natur
 ## new primpt v6
 very good fps, amazing. I want the start of the application to throw the balls in crazyyyyy amount of eneryg to show how good the balls are bouncing. it feels like the balls are behaving coreclty but like I feel like in the begning there is not enough energy throwing the ball around
 
+## new prompt v7
+
+I want them to bounce for longer like for a minute
+
 

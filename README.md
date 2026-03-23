@@ -29,7 +29,7 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 - **Ball–wall** contact uses an **analytic circle** (same radius as the drawn tank); wall segments are **visual only**, which keeps physics cost **O(balls)** per pass instead of O(balls × wall segments).
 - **Ball–ball** broadphase uses a **fixed uniform grid with singly linked lists** (no `unordered_map` rebuild per sweep), which cuts hash overhead and improves frame time with hundreds of bodies.
 - Default restitution **0.90**; **spawn velocities are very high** (large tangential + radial + random + upward kick) so the sim **opens with a violent burst** of motion, then collisions and light drag take over.
-- **Linear drag** (`linear_drag_k` ≈ `0.011` 1/s) is kept small so most energy loss comes from **collisions**, not artificial “air” damping—motion stays lively longer and settles more naturally.
+- **Linear drag** (`linear_drag_k` ≈ `0.0042` 1/s) is very small so the tank stays **actively bouncing on the order of a minute** (machine/FPS dependent) before the pile goes quiet; most loss is still from **collisions**.
 - **`bounce_threshold`** / **`rest_velocity_slop`** are tuned so only fairly gentle contacts lose restitution early; hard impacts stay bouncy.
 - **`max_velocity`** is **5400** px/s so the opening spike is not immediately clipped; wall/ball impulse clamps are raised to match.
 
