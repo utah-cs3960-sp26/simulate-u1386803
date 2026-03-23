@@ -425,7 +425,7 @@ void Simulation::step(float dt_seconds) {
   }
   if (steps > 0) {
     positional_ball_wall();
-    positional_ball_ball(2);
+    positional_ball_ball(3);
     positional_ball_wall();
     clamp_to_tank();
   }

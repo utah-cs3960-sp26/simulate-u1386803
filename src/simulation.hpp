@@ -45,16 +45,16 @@ struct Ball {
 };
 
 struct SimConfig {
-  float restitution = 0.90f;
+  float restitution = 0.92f;
   float gravity = 640.f;
-  /// Tiny air-like damping (1/s); lower = longer visible bouncing (~1+ minute of lively motion before pile calms).
-  float linear_drag_k = 0.0042f;
+  /// Minimal air-like damping (1/s); energy loss should be mostly collisions—keep tiny for long (~1+ min) chaos.
+  float linear_drag_k = 0.0018f;
   float fixed_dt = 1.f / 480.f;
   int solver_iterations = 6;
   int max_substeps = 32;
   float max_velocity = 5400.f;
-  float bounce_threshold = 7.f;
-  float rest_velocity_slop = 1.0f;
+  float bounce_threshold = 5.f;
+  float rest_velocity_slop = 0.85f;
   uint32_t rng_seed = 1u;
   int ball_count = 700;
 };

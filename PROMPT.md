@@ -102,6 +102,6 @@ very good fps, amazing. I want the start of the application to throw the balls i
 
 ## new prompt v7
 
-I want them to bounce for longer like for a minute
+I want them to bounce for longer like for a minute, fix the energy depletion, its not good. make it last longer. it doesnt matter if its crazy
 
 

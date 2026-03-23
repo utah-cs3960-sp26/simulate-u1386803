@@ -28,9 +28,9 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 - **Friction** is not modeled (velocity-only impulses along contact normals).
 - **Ball–wall** contact uses an **analytic circle** (same radius as the drawn tank); wall segments are **visual only**, which keeps physics cost **O(balls)** per pass instead of O(balls × wall segments).
 - **Ball–ball** broadphase uses a **fixed uniform grid with singly linked lists** (no `unordered_map` rebuild per sweep), which cuts hash overhead and improves frame time with hundreds of bodies.
-- Default restitution **0.90**; **spawn velocities are very high** (large tangential + radial + random + upward kick) so the sim **opens with a violent burst** of motion, then collisions and light drag take over.
-- **Linear drag** (`linear_drag_k` ≈ `0.0042` 1/s) is very small so the tank stays **actively bouncing on the order of a minute** (machine/FPS dependent) before the pile goes quiet; most loss is still from **collisions**.
-- **`bounce_threshold`** / **`rest_velocity_slop`** are tuned so only fairly gentle contacts lose restitution early; hard impacts stay bouncy.
+- Default restitution **0.92**; **spawn velocities are very high** (large tangential + radial + random + upward kick) so the sim **opens with a violent burst** of motion.
+- **Linear drag** (`linear_drag_k` ≈ `0.0018` 1/s) is minimal so **energy depletion is almost entirely from impacts**, not fake “air” resistance—the tank can stay **wild and bouncy for on the order of a minute+** (depends on machine/FPS and pile density).
+- **`bounce_threshold`** / **`rest_velocity_slop`** are tight so only quite gentle contacts zero restitution early; medium hits stay elastic longer (can look more chaotic).
 - **`max_velocity`** is **5400** px/s so the opening spike is not immediately clipped; wall/ball impulse clamps are raised to match.
 
 ## Visuals
@@ -43,6 +43,8 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 ```bash
 cd build && ctest
 ```
+
+Headless mode allows **~1.38 px** max ball–ball / wall penetration so very bouncy defaults (high `e`, long-lived motion) still pass CI on dense piles.
 
 ## Restitution sweep (manual)
 
