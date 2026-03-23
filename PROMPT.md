@@ -14,8 +14,8 @@ You are building this repository into a **working 2D physics demo**. The human i
 
 1. **Bodies:** Many **circular** balls (dynamic) and **fixed, immovable axis-aligned wall segments** (or a closed polygon made of segments). Walls do not move.
 2. **Forces:** **Gravity** downward (constant acceleration). Tune magnitude so ~1000 balls in a container visibly bounce then **settle** into a pile within a reasonable time.
-3. **Collisions:** Ball–wall and ball–ball with **configurable coefficient of restitution** `e` in **(0, 1]** (perfectly inelastic would be `e = 0`; implement something like `0.2` default). Collisions are **non-elastic** in the sense that energy is lost when `e < 1`.
-4. **Initial scene:** Approximately **1000 balls** spawned inside a **container** built from multiple wall pieces (not a single huge rectangle hack unless you also add internal dividers—prefer a visible “tank” with floor and sides). Arrange radii/masses reasonably (uniform or slight variation). Initial positions should avoid huge overlaps; a grid or layered pour is fine.
+3. **Collisions:** Ball–wall and ball–ball with 
+4. **Initial scene:** Approximately **600 balls** spawned inside a **container** built from multiple wall pieces make it small and like circular, and make sure its not maxed frame rates, it is very very very slow 12 fps which is bad (not a single huge rectangle hack unless you also add internal dividers—prefer a visible “tank” with floor and sides). Arrange radii/masses reasonably (uniform or slight variation). Initial positions should avoid huge overlaps; a grid or layered pour is fine.
 5. **Correctness goals (the hard part):**
    - Balls must **not** end up **stuck overlapping** other balls or walls after settling.
    - Balls must **not** **tunnel through** walls at the chosen timestep.
