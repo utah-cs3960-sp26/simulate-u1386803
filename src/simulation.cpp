@@ -44,7 +44,6 @@ float Simulation::rnd_range(float lo, float hi) {
 
 void Simulation::build_walls() {
   walls_.clear();
-  bowl_depth_ = 0.f;
   tank_center_ = {world_w_ * 0.5f, world_h_ * 0.5f};
   const float half = std::min(world_w_, world_h_) * 0.5f;
   tank_radius_ = half - wall_margin_;

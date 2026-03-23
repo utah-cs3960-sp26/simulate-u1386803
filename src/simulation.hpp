@@ -81,7 +81,6 @@ class Simulation {
   float world_w_ = 640.f;
   float world_h_ = 640.f;
   float wall_margin_ = 28.f;
-  float bowl_depth_ = 0.f;
   Vec2 tank_center_{};
   float tank_radius_ = 0.f;
   float cell_size_ = 22.f;
