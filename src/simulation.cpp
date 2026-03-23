@@ -73,6 +73,16 @@ void Simulation::spawn_balls() {
   }
   const float two_pi = 6.2831853f;
 
+  auto spawn_velocity = [&](Vec2 p) {
+    Vec2 off = p - tank_center_;
+    float rd = len(off);
+    Vec2 e_t = rd > 1e-4f ? Vec2{-off.y, off.x} * (1.f / rd) : Vec2{1.f, 0.f};
+    Vec2 e_r = rd > 1e-4f ? off * (1.f / rd) : Vec2{0.f, -1.f};
+    float vt = rnd_range(-440.f, 440.f);
+    float vr = rnd_range(-160.f, 160.f);
+    return e_t * vt + e_r * vr + Vec2{rnd_range(-120.f, 120.f), rnd_range(-280.f, -70.f)};
+  };
+
   auto overlaps_existing = [&](Vec2 p, float rad) {
     for (const auto& e : balls_) {
       if (len_sq(p - e.p) < (rad + e.r + 2.5f) * (rad + e.r + 2.5f)) {
@@ -100,7 +110,7 @@ void Simulation::spawn_balls() {
       Ball b{};
       b.r = rad;
       b.p = p;
-      b.v = {rnd_range(-260.f, 260.f), rnd_range(-220.f, 220.f)};
+      b.v = spawn_velocity(p);
       const float area = 3.14159265f * b.r * b.r;
       b.inv_mass = 1.f / std::max(0.0001f, area);
       balls_.push_back(b);
@@ -125,7 +135,7 @@ void Simulation::spawn_balls() {
     Ball b{};
     b.r = rad;
     b.p = p;
-    b.v = {rnd_range(-260.f, 260.f), rnd_range(-220.f, 220.f)};
+    b.v = spawn_velocity(p);
     const float area = 3.14159265f * b.r * b.r;
     b.inv_mass = 1.f / std::max(0.0001f, area);
     balls_.push_back(b);

@@ -45,8 +45,8 @@ struct Ball {
 };
 
 struct SimConfig {
-  float restitution = 0.52f;
-  float gravity = 620.f;
+  float restitution = 0.62f;
+  float gravity = 480.f;
   float fixed_dt = 1.f / 480.f;
   int solver_iterations = 4;
   int max_substeps = 32;

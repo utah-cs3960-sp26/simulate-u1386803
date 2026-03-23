@@ -25,6 +25,11 @@ On macOS you can install SDL3 with Homebrew (`brew install sdl3`) so CMake can u
 
 - Fixed timestep `1/480` s with accumulator and up to **32** substeps per rendered frame.
 - **Friction** is not modeled (velocity-only impulses along contact normals).
+- Balls spawn with **tangential and radial** speed plus an **upward** bias so motion stays lively (not only falling with gravity). Default restitution is fairly bouncy (`0.62`).
+
+## Visuals
+
+- All balls are drawn **solid green** in the graphical build.
 
 ## Tests
 

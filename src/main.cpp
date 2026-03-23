@@ -15,7 +15,7 @@ struct Args {
   bool headless = false;
   int frames = 600;
   uint32_t seed = 1u;
-  float restitution = 0.52f;
+  float restitution = 0.62f;
   int ball_count = 200;
   bool help = false;
 };
@@ -181,14 +181,9 @@ int run_visual(const Args& a) {
     SDL_RenderClear(renderer);
     draw_walls(renderer, sim);
 
+    const SDL_Color ball_green{40, 190, 95, 255};
     for (const auto& b : sim.balls()) {
-      Uint32 h = static_cast<Uint32>(b.r * 11037.f + b.p.x * 3.f + b.p.y * 7.f);
-      SDL_Color c;
-      c.r = static_cast<Uint8>(160 + (h & 63));
-      c.g = static_cast<Uint8>(170 + ((h >> 6) & 63));
-      c.b = static_cast<Uint8>(200 + ((h >> 12) & 31));
-      c.a = 255;
-      draw_ball_fan(renderer, b, c);
+      draw_ball_fan(renderer, b, ball_green);
     }
 
     SDL_RenderPresent(renderer);
